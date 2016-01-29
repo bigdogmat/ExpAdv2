@@ -14,6 +14,8 @@ ENT.EXPADV_SCREEN	= ENT
 	@: Resolution
    --- */
 
+local Resolutions = {}
+
 if SERVER then
 	util.AddNetworkString("expadv.resolution")
 	
@@ -60,9 +62,10 @@ if SERVER then
 elseif CLIENT then
 	net.Receive("expadv.resolution", function()
 		local scr = net.ReadEntity()
-
+		local res = net.ReadUInt(32)
 		if IsValid(scr) and scr.ExpAdv and scr.Screen then
-			scr.RT_Data = EXPADV.GetRenderTarget(net.ReadUInt(32))
+			Resolutions[scr:EntIndex()] = res
+			scr.RT_Data = EXPADV.GetRenderTarget(res)
 		end
 	end)
 end
@@ -159,6 +162,7 @@ end
    --- */
 
 EXPADV.RenderTargets = EXPADV.RenderTargets or {[256] = {}, [512] = {}, [1024] = {}}
+
 local MaterialInfo = { ["$vertexcolor"] = 1, ["$vertexalpha"] = 1, ["$ignorez"] = 1, ["$nolod"] = 1, }
 
 function EXPADV.GetRenderTarget(Res)
@@ -186,7 +190,7 @@ function EXPADV.GetRenderTarget(Res)
 			CLEAR = true,
 			BLANK = true,
 			CACHED = false,
-			RT = GetRenderTarget( "expadv_rt_" .. Res .. "_" .. ID, Res, Res ),
+			RT = GetRenderTarget( "expadv_rt_" .. Res .. "_" .. ID, Res + 16, Res + 16 ),
 			MAT = CreateMaterial( "expadv_rt_" .. Res .. "_" .. ID, "UnlitGeneric", MaterialInfo ),
 		}
 
@@ -211,6 +215,12 @@ function EXPADV.CacheRenderTarget(RT)
 		end
 	end
 end
+
+hook.Add( "NetworkEntityCreated", "Expadv.Screen", function(ent)
+	if !ent.ExpAdv or !ent.Screen then return end
+	local res = Resolutions[ent:EntIndex()]
+	if res then ent.RT_Data = EXPADV.GetRenderTarget(res) end
+end )
 
 /* --- ----------------------------------------------------------------------------------------------------------------------------------------------
 	@: ClearRT
@@ -356,6 +366,7 @@ function ENT:DoScreenUpdate(context)
 	if event and rtData then
 		render.PushRenderTarget(rtData.RT)
 		render.OverrideAlphaWriteEnable(true, true)
+		render.SetViewPort(8, 8, scrSize, scrSize)
 
 		if rtData.CLEAR or !self:GetNoClearFrame() then
 			render.ClearDepth()
@@ -397,7 +408,6 @@ function ENT:OnRemove()
 	EXPADV.CacheRenderTarget(self.RT_Data)
 	
 	hook.Remove( "PlayerInitialSpawn", self )
-
 	if !self:IsRunning( ) then return end
 	
 	self.Context:ShutDown( )

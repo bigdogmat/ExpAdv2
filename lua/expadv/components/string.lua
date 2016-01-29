@@ -109,7 +109,9 @@ Component:AddInlineOperator( "number", "s", "n", "tonumber(@value 1)" )
 	@: basic
    --- */
 
+Component:AddInlineFunction( "sub", "s:n", "s", "string.sub(@value 1, @value 2)" )
 Component:AddInlineFunction( "sub", "s:n,n", "s", "string.sub(@value 1, @value 2, @value 3)" )
+Component:AddFunctionHelper( "sub", "s:n", "Returns a substring starting at location (number1 start) and ending at the end of the string." )
 Component:AddFunctionHelper( "sub", "s:n,n", "Returns a substring starting at location (number1 start) and ending at (number2 end)." )
 
 Component:AddInlineFunction( "lower", "s:", "s", "string.lower(@value 1)" )

@@ -746,6 +746,8 @@ if SERVER then
 		self.CLIPS[ ID ].ENABLED = bEnable
 
 		self.SYNC_CLIPS[ ID ] = true
+		
+		ClipQueue[ self ] = true
 	end
 
 	function ENT:SetClipOrigin( ID, Vector )
@@ -759,18 +761,21 @@ if SERVER then
 			Clip.ORIGINX = Vector.x
 			Clip.SYNC_ORIGINX = true
 			self.SYNC_CLIPS[ ID ] = true
+			ClipQueue[ self ] = true
 		end
 
 		if Clip.ORIGINY ~= Vector.y then
 			Clip.ORIGINY = Vector.y
 			Clip.SYNC_ORIGINY = true
 			self.SYNC_CLIPS[ ID ] = true
+			ClipQueue[ self ] = true
 		end
 
 		if Clip.ORIGINZ ~= Vector.z then
 			Clip.ORIGINZ = Vector.z
 			Clip.SYNC_ORIGINZ = true
 			self.SYNC_CLIPS[ ID ] = true
+			ClipQueue[ self ] = true
 		end
 	end
 
@@ -780,6 +785,10 @@ if SERVER then
 		self.SYNC_CLIPS[ ID ] = self.CLIPS[ ID ].Global ~= Bool
 
 		self.CLIPS[ ID ].Global = Bool
+		
+		if self.SYNC_CLIPS[ ID ] == true then
+			ClipQueue[ self ] = true
+		end
 	end
 
 	function ENT:SetClipNormal( ID, Vector )
@@ -793,18 +802,21 @@ if SERVER then
 			Clip.NORMALX = Vector.x
 			Clip.SYNC_NORMALX = true
 			self.SYNC_CLIPS[ ID ] = true
+			ClipQueue[ self ] = true
 		end
 
 		if Clip.NORMALY ~= Vector.y then
 			Clip.NORMALY = Vector.y
 			Clip.SYNC_NORMALY = true
 			self.SYNC_CLIPS[ ID ] = true
+			ClipQueue[ self ] = true
 		end
 
 		if Clip.NORMALZ ~= Vector.z then
 			Clip.NORMALZ = Vector.z
 			Clip.SYNC_NORMALZ = true
 			self.SYNC_CLIPS[ ID ] = true
+			ClipQueue[ self ] = true
 		end
 	end
 
@@ -814,6 +826,8 @@ if SERVER then
 		self.CLIPS[ ID ] = nil
 
 		self.SYNC_CLIPS[ ID ] = true
+
+		ClipQueue[ self ] = true
 	end
 
 /*==============================================================================================

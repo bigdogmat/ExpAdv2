@@ -102,6 +102,15 @@ end
    --- */
 
 function ENT:Initialize()
+	self:InitDerma()
+
+	hook.Add( "NetworkEntityCreated", self)
+
+	self.BaseClass.Initialize(self)
+end
+
+function ENT:InitDerma()
+	if self.Panel and self.Panel:IsValid() then self.Panel:Remove() end
 
 	self.Hovered = false
 
@@ -122,8 +131,11 @@ function ENT:Initialize()
 	hook.Add("KeyRelease", self, self.OnKeyRelease)
 	hook.Add("GUIMousePressed", self, self.GUIMousePressed)
 	hook.Add("GUIMouseReleased", self, self.GUIMouseReleased)
+end
 
-	self.BaseClass.Initialize(self)
+function ENT:NetworkEntityCreated(e)
+	if e ~= self then return end
+	self:InitDerma()
 end
 
 function ENT:OnRemove()
@@ -135,6 +147,7 @@ function ENT:OnRemove()
 	EXPADV.CacheRenderTarget(self.RT_Data)
 	
 	hook.Remove( "PlayerInitialSpawn", self )
+	hook.Remove( "NetworkEntityCreated", self )
 
 	if !self:IsRunning( ) then return end
 	
@@ -408,7 +421,8 @@ function ENT:OnRemove( )
 	hook.Remove("KeyRelease", self)
 	hook.Remove("GUIMousePressed", self)
 	hook.Remove("GUIMouseReleased", self)
-
+	hook.Remove( "NetworkEntityCreated", self )
+	
 	if self.Panel then self.Panel:Remove() end
 
 	return self.BaseClass.BaseClass.OnRemove( self )

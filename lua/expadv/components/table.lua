@@ -99,12 +99,13 @@ Component:AddInlineFunction( "type", "t:s", "s", "EXPADV.TypeName(@value 1.Types
 Component:AddInlineFunction( "type", "t:e", "s", "EXPADV.TypeName(@value 1.Types[@value 2])" )
 
 Component:AddPreparedFunction("connect", "t:t", "t", [[
-@value 1.Size = @value 1.Size + @value 2.Size
-@value 1.Count = @value 1.Count + @value 2.Count
-for I=1,#@value 1.Data,1 do
-	@value 1.Data[#@value 1.Data+1] = @value 2.Data[I]
-	@value 1.Types[#@value 1.Types+1] = @value 2.Types[I]
-end
+	for K, V in pairs( @value 2.Look ) do
+		if @value 1.Data[K] == nil then @value 1.Size = @value 1.Size + 1 end
+		@value 1.Data[K] = @value 2.Data[K]
+		@value 1.Types[K] = @value 2.Types[K]
+		@value 1.Look[K] = K
+		if type( K ) == "number" then @value 1.Count = math.max( K, @value 1.Count ) end
+	end
 ]],"@value 1")
 
 Component:AddPreparedFunction("hasValue", "t:vr", "b", [[
@@ -140,11 +141,12 @@ Component:AddFunctionHelper("hasValue", "t:vr", "Checks if the given value is in
 local Unpack
 
 function Unpack( Context, Trace, Table, Index )
-	local Object = Table.Data[Index or 1]
+	Index = Index or 1
+	local Object = Table.Data[Index]
 
-	if Object ~= nil then return end
+	if Object == nil then return end
 	
-	return { Object, Table.Types[Index] }, Unpack( Context, Trace, Table, (Index or 1) + 1 )
+	return { Object, Table.Types[Index] }, Unpack( Context, Trace, Table, Index + 1 )
 end
 
 
@@ -320,6 +322,29 @@ Component:AddFunctionHelper( "keys", "t:", "Returns an array of indexs on the ta
 
 	Component:AddFunctionHelper( "insert", "t:vr", "Inserts variants object to the top of the tables array element." ) 
 	Component:AddFunctionHelper( "insert", "t:n,vr", "Inserts %variants object tables array element at index, pushing all higher index up." )
+
+
+/* --- --------------------------------------------------------------------------------
+	@: Vararg insert functions
+   --- */
+
+   Component:AddVMOperator( "{...}", "t", "",
+		function( Context, Trace, Table )
+			for _, Value in pairs(Context._VARARGS_) do
+				local Data = Table.Data
+
+				table.insert( Data, Value[1] )
+				table.insert( Table.Types, Value[2] )
+
+				Table.Count = #Data
+
+				Table.Size = Table.Size + 1
+
+				Table.Look[Table.Count] = Table.Count
+			end
+
+			Context.TrigMan[Table] = true
+		end )
 
 /* --- --------------------------------------------------------------------------------
 	@: The remove function, shall return a variant

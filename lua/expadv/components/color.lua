@@ -87,7 +87,7 @@ Component:AddInlineOperator( "string", "c", "s", "string.format( \"Color(%i, %i,
    --- */
 
 ColorObj:AddVMOperator( "=", "n,c", "", function( Context, Trace, MemRef, Value )
-	local Prev = Context.Memory[MemRef] or Color( 0, 0 , 0, 0 )
+	local Prev = Context.Memory[MemRef] or Color( 0, 0, 0, 0 )
 
 	Context.Memory[MemRef] = Value
 	Context.Delta[MemRef] = Color( Prev.r - Value.r, Prev.g - Value.g, Prev.b - Value.b, Prev.a - Value.a )
@@ -103,6 +103,10 @@ ColorObj:AddInlineOperator( "$", "n", "c", "(Context.Delta[@value 1] or Color(0,
 Component:AddInlineFunction( "color", "n,n,n,n", "c", "Color(@value 1, @value 2, @value 3, @value 4)" )
 Component:AddFunctionHelper( "color", "n,n,n,n", "Creates a color object")
 EXPADV.AddFunctionAlias( "color", "n,n,n" )
+Component:AddInlineFunction( "color", "n,n", "c", "Color(@value 1, @value 1, @value 1, @value 2)" )
+Component:AddFunctionHelper( "color", "n,n", "Creates a color object, alias for color(number N, number N, number N, number M)")
+Component:AddInlineFunction( "color", "n", "c", "Color(@value 1, @value 1, @value 1)" )
+Component:AddFunctionHelper( "color", "n", "Creates a color object, alias for color(number N, number N, number N)")
 
 Component:AddPreparedFunction( "clone", "c:", "c", "Color(@value 1.r, @value 1.g, @value 1.b, @value 1.a)" )
 Component:AddFunctionHelper( "clone", "c:", "Returns a clone of the color." )

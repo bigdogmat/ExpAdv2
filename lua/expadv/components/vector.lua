@@ -13,7 +13,11 @@ Component.Description = "Adds a 3d and a 2d vector object."
 
 local VectorObj = Component:AddClass( "vector", "v" )
 
-VectorObj:StringBuilder( function( Vector ) return string.format( "Vec( %.2f, %.2f, %.2f )", Vector.x, Vector.y, Vector.z ) end )
+VectorObj:StringBuilder( function( Vector )
+	if !Vector then return "Vec(void, void, void)" end
+	return string.format( "Vec( %.2f, %.2f, %.2f )", Vector.x, Vector.y, Vector.z )
+end )
+
 VectorObj:CanSerialize( true )
 VectorObj:DefaultAsLua( Vector(0, 0, 0) )
 
@@ -301,11 +305,26 @@ Component:AddFunctionHelper( "toLocalAxis", "e:v", "Converts a world axis to a l
 /* --- --------------------------------------------------------------------------------
     @: Intersect
    --- */
+local function intersectRayWithOBB(Context, Trace, rStart, rDir, bOrigin, bAngles, bMins, bMaxs)
+	local hPos, nDir, frac = util.IntersectRayWithOBB(rStart, rDir, bOrigin, bAngles, bMins, bMaxs)
+	
+	hPos = hPos or Vector(0, 0, 0)
+	nDir = nDir or Vector(0, 0, 0)
+	frac = frac or 0
+	
+	return {
+		Look = {RayStart = "RayStart", RayDir = "RayDir", BoxOrigin = "BoxOrigin", BoxAngles = "BoxAngles", BoxMins = "BoxMins", BoxMaxs = "BoxMaxs", HitPos = "HitPos", Direction = "Direction", Fraction = "Fraction"},
+		Data = {RayStart = rStart, RayDir = rDir, BoxOrigin = bOrigin, BoxAngles = bAngles, BoxMins = bMins, BoxMaxs = bMaxs, HitPos = hPos, Direction = nDir, Fraction = frac},
+		Types = {RayStart = "v", RayDir = "v", BoxOrigin = "v", BoxAngles = "a", BoxMins = "v", BoxMaxs = "v", HitPos = "v", Direction = "v", Fraction = "n"},
+		Size = 9,
+		Count = 0
+	}
+end
 
-Component:AddInlineFunction( "intersectRayWithOBB", "v,v,v,a,v,v", "v", "$util.IntersectRayWithOBB( @value 1, @value 2, @value 3, @value 4, @value 5, @value 6 )")
+Component:AddVMFunction( "intersectRayWithOBB", "v,v,v,a,v,v", "t", intersectRayWithOBB)
+Component:AddFunctionHelper( "intersectRayWithOBB", "v,v,v,a,v,v", "Performs a ray box intersection and returns table of data, (vector RayS tart, vector Ray Direction, vector Box Origin, angle BoxAngles, vector BoxMin, vector BoxMax)." )
+
 Component:AddInlineFunction( "intersectRayWithPlane", "v,v,v,v", "v", "$util.IntersectRayWithPlane( @value 1, @value 2, @value 3, @value 4 )")
-
-Component:AddFunctionHelper( "intersectRayWithOBB", "v,v,v,a,v,v", "Performs a ray box intersection and returns position, (vector RayS tart, vector Ray Direction, vector Box Origin, angle BoxAngles, vector BoxMin, vector BoxMax)." )
 Component:AddFunctionHelper( "intersectRayWithPlane", "v,v,v,v", "Performs a ray plane intersection and returns the hit position, (vector Ray Origin, vector Ray Direction, vector Plane Position, vector Plane Normal)." )
 
 /* --- --------------------------------------------------------------------------------

@@ -82,7 +82,7 @@ end )
 Component:AddVMFunction( "writeVector2", "st:v2", "", function( Context, Trace, Stream, Obj )
 	Stream.W = Stream.W + 1
 	if Stream.W >= 128 then Context:Throw( Trace, "stream", "Failed to write vector to stream, maximum stream size achived (128)" ) end
-	Stream.V[Stream.W] = {Obj.x, Obj.y}
+	Stream.V[Stream.W] = { x = Obj.x, y = Obj.y }
 	Stream.T[Stream.W] = "_v2"
 end )
 
@@ -210,7 +210,7 @@ Component:AddVMFunction( "readVector2", "st:", "v2", function( Context, Trace, S
 	end
 
 	local Obj = Stream.V[Stream.R]
-	return Vector2(Obj[1], Obj[2])
+	return Vector2(Obj.x, Obj.y)
 end )
 
 Component:AddVMFunction( "readAngle", "st:", "a", function( Context, Trace, Stream )
@@ -236,7 +236,7 @@ Component:AddVMFunction( "readColor", "st:", "c", function( Context, Trace, Stre
 
 	local Value = Stream.V[Stream.R]
 
-	return { Value.r, Value.g, Value.b, Value.a }
+	return { r = Value.r, g = Value.g, b = Value.b, a = Value.a }
 end )
 
 Component:AddVMFunction( "readStream", "st:", "st", function( Context, Trace, Stream )

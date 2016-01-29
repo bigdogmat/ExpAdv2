@@ -969,7 +969,10 @@ function Compiler:Build_Function( Trace, Params, UseVarg, Sequence, Memory )
 		PreSequence[ #PreSequence + 1 ] = Operator.Compile( self, Trace, Quick( Param[3], "n" ), Quick( Inputs[I] .. (Param[2] ~= "_vr" and "[1]" or ""), Type ) )
 	end
 	
-	if UseVarg then Inputs[#Inputs + 1] = "..." end
+	if UseVarg then
+		Inputs[#Inputs + 1] = "..."
+		PreSequence[ #PreSequence + 1 ] = "local _Vargs = Context._VARARGS_; Context._VARARGS_ = {...}"
+	end
 
 	table.insert( Inputs, 1, "Context" )
 
@@ -977,7 +980,16 @@ function Compiler:Build_Function( Trace, Params, UseVarg, Sequence, Memory )
 		PostSequence = { Trace = Trace, Return = "", Prepare = PopStack, FLAG = EXPADV_PREPARE }
 	end
 	
-	local Sequence = self:Compile_SEQ( Trace, { self:Compile_SEQ( Trace, PreSequence ), Sequence, PostSequence } )
+	local Stmts = { self:Compile_SEQ( Trace, PreSequence ), Sequence }
+
+	if UseVarg then
+		Stmts[3] = { Trace = Trace, Return = "", Prepare = "Context._VARARGS_ = _Vargs", FLAG = EXPADV_PREPARE }
+		Stmts[4] = PostSequence
+	else
+		Stmts[3] = PostSequence
+	end
+
+	local Sequence = self:Compile_SEQ( Trace, Stmts )
 
 	local Lua = string.format( "function( %s )\nif !Context.Online then return end\n%s\n%send", table.concat( Inputs, "," ), Sequence.Prepare or "", Sequence.Inline or "" )
 
@@ -1013,7 +1025,7 @@ end
 	@: Tables
    --- */
 
-function Compiler:Compile_TABLE( Trace, KeyValues )
+function Compiler:Compile_TABLE( Trace, KeyValues, Vargs )
 	local Statments = { }
 
 	local Defined = self:DefineVariable( )
@@ -1024,6 +1036,16 @@ function Compiler:Compile_TABLE( Trace, KeyValues )
 
 	for Key, Value in pairs( KeyValues ) do
 		Statments[#Statments + 1] = self:Compile_SET( Trace, Quick, Key, Value )
+	end
+
+	if Vargs then
+		local Operator = self:LookUpOperator( "{...}", "t" )
+
+		if !Operator then
+			self:TraceError( Trace, "No such operation { ... }" )
+		end
+
+		Statments[#Statments + 1] =  Operator.Compile( self, Trace, Quick )
 	end
 
 	local Instr = self:Compile_SEQ(Trace, Statments)

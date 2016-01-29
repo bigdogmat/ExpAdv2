@@ -129,14 +129,14 @@ elseif CLIENT then
 
 			if script and script ~= "" then
 				local editor = EXPADV.Editor.GetInstance()
-				local tab = editor.GateTabs[ExpAdv]
+				local tab = editor.GateTabs[entity]
 
 				local name = "generic"
 				if entity.GetGateName then
 					name = entity:GetGateName()
 				end
 
-				if !tab then
+				if !IsValid( tab ) then
 					editor:NewTab(script, nil, name)
 					tab = editor.TabHolder:GetActiveTab()
 					tab.Entity = entity

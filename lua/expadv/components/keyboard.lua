@@ -213,12 +213,18 @@ EXPADV.AddEventHelper("keypress", "Called when a player presses a key, gives bot
 Component:AddEvent( "keyrelease", "ply,n", "" )
 EXPADV.AddEventHelper("keyrelease", "Called when a player releases a key, gives both the player and the ascii char released.")
 
-local LShift, RShift = { }, { }
+local LShift, RShift, DownKeys = { }, { }, { }
 
 hook.Add( "PlayerButtonDown", "expadv.keys", function( Ply, Key )
 	if Key == KEY_LSHIFT then LShift[Ply] = true end
 	if Key == KEY_RSHIFT then RShift[Ply] = true end
-
+	
+	local Held = DownKeys[Ply]
+	if !Held then Held = {}; DownKeys[Ply] = Held end
+	
+	if Held[Key] then return end
+	Held[Key] = true;
+	
 	if !EXPADV.IsLoaded then return end
 
 	for _, Context in pairs( EXPADV.CONTEXT_REGISTERY ) do
@@ -246,9 +252,14 @@ end )
 hook.Add( "PlayerButtonUp", "expadv.keys", function( Ply, Key )
 	if Key == KEY_LSHIFT then LShift[Ply] = nil end
 	if Key == KEY_RSHIFT then RShift[Ply] = nil end
-
+	
+	local Held = DownKeys[Ply]
+	if !Held then Held = {}; DownKeys[Ply] = Held end
+	
+	Held[Key] = nil;
+	
 	if !EXPADV.IsLoaded then return end
-
+	
 	for _, Context in pairs( EXPADV.CONTEXT_REGISTERY ) do
 
 		if !Context.Online then continue end

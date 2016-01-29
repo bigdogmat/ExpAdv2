@@ -576,10 +576,16 @@ end
 function Compiler:GetTable( Trace )
 	if !self:AcceptToken("lcb") then return end
 	
-	local Index, KeyValues = 0, {}
+	local Index, KeyValues, Varg = 0, {}, Varg
 
 	while !self:CheckToken( "rcb" ) do
 		self:ExcludeToken( "com", "Expression separator (,) can not appear here." )
+
+		if self:AcceptToken("varg") then
+			self:ExcludeToken( "com", "Varargs (...) must appear at the end of a table." )
+			Varg = true
+			break
+		end
 
 		local Expression = self:Expression(Trace)
 
@@ -620,7 +626,7 @@ function Compiler:GetTable( Trace )
 
 	self:RequireToken( "rcb", "Right curly bracket (}) missing, to terminate table" )
 
-	return self:Compile_TABLE( Trace, KeyValues )
+	return self:Compile_TABLE( Trace, KeyValues, Varg )
 end
 
 /* --- ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -1325,7 +1331,8 @@ function Compiler:Statement_6( Trace )
 			self:PushReturnDeph( ReturnClass, false )
 
 			local Perams, UseVarg = self:Util_Perams( Trace )
-			
+			self:PushVarg(UseVarg)
+
 			self:RequireToken( "rpa", "Right parenthesis () ) missing, to close function arguments" )
 			
 			//self:RequireToken( "lcb", "Left curly bracket ({) missing, to open function" )
@@ -1334,6 +1341,7 @@ function Compiler:Statement_6( Trace )
 	
 			local Memory = self:PopLambdaDeph( )
 			self:PopReturnDeph( )
+			self:PopVarg()
 			self:PopScope( )
 	
 			//self:RequireToken( "rcb", "Right curly bracket (}) missing, to close function" )
@@ -1611,7 +1619,7 @@ end
 function Compiler:Util_Perams( Trace )
 	local Params, Used, UseVarg = { }, { }, false
 	
-	if self:CheckToken( "var", "func" ) then
+	if self:CheckToken( "var", "func", "varg" ) then
 
 		-- local Class
 
@@ -1619,6 +1627,12 @@ function Compiler:Util_Perams( Trace )
 
 			self:ExcludeToken( "com", "Parameter separator (,) must not appear here" )
 			
+			if self:AcceptToken( "varg" ) then
+				self:ExcludeToken( ",", "vararg (...) must be last parameter." )	
+				UseVarg = true
+				break
+			end
+
 			self:ExcludeToken( "func", "functions may not be passed as an argument, cast to a delegate first." )
 			-- TODO: Add Autocasting :D
 
@@ -1644,14 +1658,14 @@ function Compiler:Util_Perams( Trace )
 			
 			if !self:AcceptToken( "com" ) then break end
 
-			self:ExcludeVarArg( )
+			--self:ExcludeVarArg( )
 		end
 	end
 	
-	if self:AcceptToken( "varg" ) then
-		self:ExcludeToken( ",", "vararg (...) must be last parameter." )	
-		UseVarg = true
-	end
+	--if self:AcceptToken( "varg" ) then
+	--	self:ExcludeToken( ",", "vararg (...) must be last parameter." )	
+	--	UseVarg = true
+	--end
 	
 	return Params, UseVarg
 end

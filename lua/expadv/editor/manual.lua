@@ -59,6 +59,17 @@ local PANEL = { }
 	function PANEL:Search( Query )
 		self.Contents:Clear( )
 
+		local Desc_Col = 0
+		for i = 6, 1, -1 do
+			local Column = self.Contents.Columns[i]
+			if IsValid( Column ) then
+				if Column.Header:GetText() == "Description" then
+					Desc_Col = i
+					break
+				end
+			end
+		end
+
 		local TotalResults = 0
 
 		for I = 1, #self.Lines do
@@ -78,7 +89,11 @@ local PANEL = { }
 			if !AddLine then continue end
 
 			TotalResults = TotalResults + 1
-			self.Contents:AddLine( Line[1], Line[2], Line[3], Line[4], Line[5], Line[6] )
+			local Row = self.Contents:AddLine( Line[1], Line[2], Line[3], Line[4], Line[5], Line[6] )
+			
+			if Desc_Col > 1 then
+				Row:SetTooltip( ( Line[Desc_Col - 1] or "" ) .."\n\n".. ( Line[Desc_Col] or "No description" ) )
+			end
 		end
 
 		if TotalResults == 0 then
@@ -88,6 +103,8 @@ local PANEL = { }
 		else
 			self.Label:SetText( self.LabelText )
 		end
+
+		self.Contents:SortByColumn( 3 ) -- Universal almost for all EA_HelpList blocks
 	end
 
 vgui.Register( "EA_HelpList", PANEL, "DPanel" )
@@ -101,7 +118,7 @@ function PANEL:MakeInfoSheet( )
 	self.Sheet_Info = self:Add( "EA_HelpList" )
 	self.Sheet_Info:SetLabel( "Information" )
 
-	self.Sheet_Info:AddColumn( "", 60 )
+	self.Sheet_Info:AddColumn( "", 100 )
 	self.Sheet_Info:AddColumn( "" )
 end
 
@@ -132,7 +149,7 @@ function PANEL:MakeOperatorSheet( )
 	self.Sheet_Operator:AddColumn( "Avalibility", 60 )
 	self.Sheet_Operator:AddColumn( "Operator",  70 )
 	self.Sheet_Operator:AddColumn( "Return",  60 )
-	self.Sheet_Operator:AddColumn( "Example" )
+	self.Sheet_Operator:AddColumn( "Example", 300 )
 	self.Sheet_Operator:AddColumn( "Description" )
 end
 
@@ -148,7 +165,7 @@ function PANEL:MakeFunctionSheet( )
 
 	self.Sheet_Function:AddColumn( "Avalibility", 60 )
 	self.Sheet_Function:AddColumn( "Return", 60 )
-	self.Sheet_Function:AddColumn( "Function" )
+	self.Sheet_Function:AddColumn( "Function", 300 )
 	self.Sheet_Function:AddColumn( "Description" )
 end
 
@@ -164,7 +181,7 @@ function PANEL:MakeMethodSheet( )
 
 	self.Sheet_Method:AddColumn( "Avalibility", 60 )
 	self.Sheet_Method:AddColumn( "Return", 60 )
-	self.Sheet_Method:AddColumn( "Method" )
+	self.Sheet_Method:AddColumn( "Method", 300 )
 	self.Sheet_Method:AddColumn( "Description" )
 end
 
@@ -180,7 +197,7 @@ function PANEL:MakeEventSheet( )
 
 	self.Sheet_Event:AddColumn( "Avalibility", 60 )
 	self.Sheet_Event:AddColumn( "Return", 60 )
-	self.Sheet_Event:AddColumn( "Event" )
+	self.Sheet_Event:AddColumn( "Event", 300 )
 	self.Sheet_Event:AddColumn( "Description" )
 end
 
@@ -373,9 +390,9 @@ function EXPADV.Editor.OpenHelper( )
 
 		TabSheet:AddSheet( "Components", ComponentTabSheet, nil, true, true, "Components & Classes" )
 		TabSheet:AddSheet( "Browser", BrowserCanvas, nil, true, true, "Browse" )
-		TabSheet:AddSheet( "Wiki and Syntax", WikiTabSheet, nil, true, true, "Syntax documentation." )
-		TabSheet:AddSheet( "Examples", ExamplesTabSheet, nil, true, true, "Example Codes." )
-		TabSheet:AddSheet( "Tutorial", GuideTabSheet, nil, true, true, "EXPADV2 For Dummies." )
+		TabSheet:AddSheet( "Wiki and Syntax", WikiTabSheet, nil, true, true, "Syntax documentation" )
+		TabSheet:AddSheet( "Examples", ExamplesTabSheet, nil, true, true, "Example Codes" )
+		TabSheet:AddSheet( "Tutorial", GuideTabSheet, nil, true, true, "EXPADV2 For Dummies" )
 
 	-- COMPONENTS & CLASSES:
 
@@ -500,11 +517,17 @@ function EXPADV.Editor.OpenHelper( )
 			Frame:SetActiveComponentPage( "core" )
 		end
 
-		for _, Component in pairs( EXPADV.Components ) do
+		local SortedComp = {}
+		for _, Comp in pairs( EXPADV.Components ) do
+			table.insert( SortedComp, Comp )
+		end
+		table.SortByMember( SortedComp, "Name", true )
+
+		for _, Component in ipairs( SortedComp ) do
 			local Page = Frame:GetComponentPanel( Component.Name )
 
 			Page:GetInfoSheet( ):AddLine( "Component", Component.Name )
-			Page:GetInfoSheet( ):AddLine( "Author", Component.Author or "Unkown" ) 
+			Page:GetInfoSheet( ):AddLine( "Author", Component.Author or "Unknown" ) 
 			Page:GetInfoSheet( ):AddLine( "Status", Component.Enabled and "Enabled" or "Disabled" )
 			Page:GetInfoSheet( ):AddLine( "Description", Component.Description or "N/A" )
 
@@ -603,16 +626,28 @@ function EXPADV.Editor.OpenHelper( )
 		local RootClassNode = NodeList:AddNode( "Classes" )
 		RootClassNode:SetIcon( "fugue/rocket-fly.png" )
 
+		-- Preparation hack for SortedPairs
+		local LongToShort = {}
+		local ClNew = {}
 		for Short, Panel in pairs( ClassPanels ) do
+			local Unit = EXPADV.GetClass( Short )
+			local Long
+			if Unit ~= nil then Long = Unit.Name
+			else Long = "unknown:".. Short end
+			LongToShort[Long] = Short
+			ClNew[Long] = Panel
+		end
 
-			local Class = EXPADV.GetClass(Short)
+		for Long, Panel in SortedPairs( ClNew ) do
+			local Short = LongToShort[Long]
+			local Class = EXPADV.GetClass( Short )
 			local Page = Frame:GetClassPanel( Short )
 
 			if !Class or !Page then
 				continue
 			end
 
-			Page:GetInfoSheet( ):AddLine( "Class", Class.Name )
+			Page:GetInfoSheet( ):AddLine( "Class", Long )
 			Page:GetInfoSheet( ):AddLine( "Extends", Class.DerivedClass and Class.DerivedClass.Name or "generic" ) 
 			Page:GetInfoSheet( ):AddLine( "Component", Class.Component and Class.Component.Name or "Core" )
 			Page:GetInfoSheet( ):AddLine( "Avalibility", GetAvalibility( Class ) )
@@ -624,14 +659,14 @@ function EXPADV.Editor.OpenHelper( )
 				ComponentNode.ClassNode:SetIcon( "fugue/rocket-fly.png" )
 			end
 
-			local Node = ComponentNode.ClassNode:AddNode( Class.Name )
+			local Node = ComponentNode.ClassNode:AddNode( Long )
 			Node:SetIcon( "fugue/block.png" )
 
 			function Node:DoClick( )
 				Frame:SetActiveClassPage( Short )
 			end
 
-			local Node = RootClassNode:AddNode( Class.Name )
+			local Node = RootClassNode:AddNode( Long )
 			Node:SetIcon( "fugue/block.png" )
 
 			function Node:DoClick( )

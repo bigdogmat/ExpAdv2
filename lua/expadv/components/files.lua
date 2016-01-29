@@ -14,7 +14,7 @@ Component.Description = "Read and write files."
 	@: Settings
    --- */
 
-Component:CreateSetting( "max_filesize", 300 )
+Component:CreateSetting( "max_filesize", 5120 )
 
 /* --- --------------------------------------------------------------------------------
 	@: functions

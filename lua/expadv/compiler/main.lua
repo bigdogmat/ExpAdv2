@@ -245,7 +245,8 @@ function Compiler:MakeVirtual( Instruction, Force )
 	local Instr = self:NewLuaInstruction( Trace, Instruction, nil, string.format( "Context.Instructions[%i]( Context )", ID ) )
 
 	Instr.IsRaw = true
-
+	Instr.IsVirtual = true
+	
 	return Instr, ID
 end
 
@@ -327,6 +328,20 @@ end
    		return Memory
    end
 
+   function Compiler:PushVarg(State)
+   		self.VargDeph = self.VargDeph + 1
+   		self.VargMemory[ self.VargDeph ] = State or false
+   		self.VarArgsAvalible = State or false
+   end
+
+   function Compiler:PopVarg( )
+   		local Memory = self.FreshMemory[ self.VargDeph ]
+   		self.VargMemory[ self.VargDeph ] = nil
+   		self.VargDeph = self.VargDeph - 1
+   		self.VarArgsAvalible = Memory
+   		return Memory
+   end
+
    function Compiler:PushLoopDeph( )
    		self:PushMemory( )
    		self.LoopDeph = self.LoopDeph + 1
@@ -391,6 +406,7 @@ end
 
 function Compiler:FindCell( Trace, Variable, bError )
 	for Scope = self.ScopeID, 0, -1 do
+		if Scope == 0 then PrintTable(self.Scopes[ Scope ]) end
 		local MemRef = self.Scopes[ Scope ][ Variable ]
 		
 		if MemRef then
@@ -474,8 +490,8 @@ function Compiler:CreateVariable( Trace, Variable, Class, Modifier, Comparator )
 		else
 			MemRef = self:NextMemoryRef( )
 
-			self.Global[ MemRef ] = { Variable = Variable, Memory = MemRef, Scope = 0, Return = ClassObj.Short, ClassObj = ClassObj, Modifier = "global", Server = self.IsServerScript, Client = self.IsClientScript }
-			self.Cells[ MemRef ] = self.Global[ MemRef ]
+			self.Global[ Variable ] = MemRef
+			self.Cells[ MemRef ] = { Variable = Variable, Memory = MemRef, Scope = 0, Return = ClassObj.Short, ClassObj = ClassObj, Modifier = "global", Server = self.IsServerScript, Client = self.IsClientScript }
 		end
 
 		if self.Scope[ Variable ] then
@@ -484,12 +500,12 @@ function Compiler:CreateVariable( Trace, Variable, Class, Modifier, Comparator )
 
 		self.Scope[ Variable ] = MemRef
 
-		return self.Global[ MemRef ]
+		return self.Cells[ MemRef ]
 	end
 
 	/*if Modifier == "synced" then
 		if !ClassObj.WriteToNet or !ClassObj.ReadFromNet then
-			self:TraceError( Trace, "Synced variables of class %q are not supported.", Class )
+			self:TraceError( Trace, "Synced variables of class %q are not supported.", ClassObj.Name )
 		end
 
 		local MemRef = self.Scope[ Variable ]
@@ -520,7 +536,7 @@ function Compiler:CreateVariable( Trace, Variable, Class, Modifier, Comparator )
 
 		if Modifier == "input" then
 			if !ClassObj.Wire_in_type then
-				self:TraceError( Trace, "Wire inputs of class %q are not supported.", Class )
+				self:TraceError( Trace, "Wire inputs of class %q are not supported.", ClassObj.Name )
 			end
 
 			local MemRef = self.InPorts[ Variable ]
@@ -545,7 +561,7 @@ function Compiler:CreateVariable( Trace, Variable, Class, Modifier, Comparator )
 
 		if Modifier == "output" then
 			if !ClassObj.Wire_out_type then
-				self:TraceError( "Wire outputs of class %q are not supported.", Class )
+				self:TraceError( Trace, "Wire outputs of class %q are not supported.", ClassObj.Name )
 			end
 
 			local MemRef = self.OutPorts[ Variable ]
@@ -789,8 +805,8 @@ function EXPADV.CreateCompiler(Script, Files)
 	self:BuildScopes()
 	self.Delta, self.Memory = { }, { }
 	self.Cells, self.SyncVars, self.InPorts, self.OutPorts = { }, { }, { }, { }
-	self.FreshMemory, self.MemoryDeph, self.LambdaDeph, self.LoopDeph = { }, 0, 0, 0
-	self.ReturnOptional, self.ReturnTypes, self.ReturnDeph = { }, { }, 0
+	self.FreshMemory, self.MemoryDeph, self.LambdaDeph, self.LoopDeph, self.VargDeph = { }, 0, 0, 0, 0
+	self.ReturnOptional, self.ReturnTypes, self.VargMemory, self.ReturnDeph = { }, { }, { }, 0
 	self.ClassDeph, self.ClassCells, self.ClassMemory, self.Classes  = 0, { }, { }, {}
 	return self
 end

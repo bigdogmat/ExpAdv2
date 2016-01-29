@@ -251,11 +251,14 @@ function PANEL:MovePosition( caret, offset )
 			end
 		end
 	end
-
 	return caret
 end
 
 function PANEL:ScrollCaret( )
+	if !self.Rows[self.Caret.x] then
+		self.Caret.x = self.Caret.x - 1
+		self.Caret.y = #self.Rows[self.Caret.x] + 1
+	end
 	if self.Caret.x - self.Scroll.x < 1 then
 		self.Scroll.x = self.Caret.x - 1
 		if self.Scroll.x < 1 then self.Scroll.x = 1 end
@@ -327,8 +330,11 @@ function PANEL:GetArea( selection )
 		for i = start.x + 1, stop.x - 1 do
 			text = text .. "\n" .. self.Rows[i]
 		end
-
-		return text .. "\n" .. string_sub( self.Rows[stop.x], 1, stop.y - 1 )
+		if self.Rows[stop.x] then
+			return text .. "\n" .. string_sub( self.Rows[stop.x], 1, stop.y - 1 )
+		else
+			return text
+		end
 	end
 end
 
@@ -888,6 +894,15 @@ function PANEL:_OnKeyCodeTyped( code )
 					self:ScrollCaret( ) 
 					break 
 				end 
+			end
+		elseif code == KEY_RBRACKET then
+			if shift then
+				local RCBOut = GetConVar("expadv_rcb_outdent")
+				RCBOut = RCBOut && RCBOut:GetBool()
+				if RCBOut then
+					local Caret = self.Caret:Clone( )
+					if string.Replace( self.Rows[Caret.x], " ", "" ) == "" then code = KEY_TAB end
+				end
 			end
 		end 
 	end
@@ -1751,6 +1766,7 @@ function PANEL:CloseCodeCompletionWindow( )
 	end
 end
 
+CreateClientConVar( "expadv_rcb_outdent", 1, true )
 CreateClientConVar( "expadv_editor_codecompletion", 1, true )
 
 vgui.Register( "EA_Editor", PANEL, "EditablePanel" ) 

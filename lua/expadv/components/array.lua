@@ -2,7 +2,7 @@
 	@: Array Component
    ---	*/
 
-local Component = EXPADV.AddComponent( "arays" , true )
+local Component = EXPADV.AddComponent( "arrays" , true )
 
 Component.Author = "Rusketh"
 Component.Description = "Adds array objects."
@@ -23,14 +23,14 @@ Array:StringBuilder( function( A ) return string.format( "array<%s,%i>", EXPADV.
 	@: Wire Support
    ---	*/
 
-if WireLib then 
+if WireLib then
 	Array:WireIO( "STATICARRAY",
 		function(Value, Context) -- To Wire
 	        return table.Copy(Value)
 	    end, function(Value, context) -- From Wire
 	        return table.Copy(Value)
 	    end)
-	
+
 	if SERVER then
 		WireLib.DT.STATICARRAY = {
 			Zero = {__type = "n"}
@@ -83,7 +83,7 @@ Component:AddPreparedFunction("hasValue", "ar:vr", "b", [[
 		if @value 2[2] ~= @value 1.__type then
 			Context:Throw(@trace, "array", "variant not of array type, " .. @value 1.__type .. " expected got " .. EXPADV.TypeName(@value 2[2]))
 		end
-		
+
 		@value 2 = @value 2[1]
 	end
 
@@ -98,7 +98,7 @@ Component:AddPreparedFunction("hasValue", "ar:vr", "b", [[
 
 Component:AddFunctionHelper("hasValue", "ar:vr", "Checks if the given value is in the given array.")
 
-			
+
 
 /* --- --------------------------------------------------------------------------------
 	@: Unpack to vararg
@@ -106,7 +106,7 @@ Component:AddFunctionHelper("hasValue", "ar:vr", "Checks if the given value is i
 
 local function Unpack( Array, Index )
 	if Array[Index] == nil then return end
-	
+
 	if Array.__type == "_vr" then return Array[Index], Unpack( Array, Index + 1 ) end
 
 	return { Array[Index], Array.__type }, Unpack( Array, Index + 1 )
@@ -213,20 +213,20 @@ function Component:OnPostRegisterClass( Name, Class )
 
 	if !Class.Short == "_vr" then
 		Component:AddPreparedFunction("hasValue", "ar:" .. Class.Short, "b", [[
-			
+
 			if @value 1.__type ~= "]] .. Class.Short .. [[" then
 				Context:Throw(@trace, "array", "variant not of array type, "]] .. Class.Short .. [[" expected got " .. EXPADV.TypeName(@value 1.__type)) end
 			end
-			
+
 			@value 2 = @value 2[2]
 
 			@define found = false
 
 			for k, v in pairs(@value 1) do
 				if k == "__type" then continue end
-				
+
 				if @value 1.__type == "_vr" then
-					if v[2] ~= "]] .. Class.Short .. [[" then continue end 
+					if v[2] ~= "]] .. Class.Short .. [[" then continue end
 					v = v[1]
 				end
 
@@ -283,7 +283,7 @@ end
 
 		for Index, Value in pairs(Array) do
 			if Index ~= "__type" then
-				Result[Index] = EXPADV.ToString( Array.__type, Value ) 
+				Result[Index] = EXPADV.ToString( Array.__type, Value )
 			end
 		end
 
@@ -374,7 +374,7 @@ Component:AddFunctionHelper( "writeArray", "st:ar", "Appends an array to the str
 
 Component:AddVMFunction( "readArray", "st:", "ar", function( Context, Trace, Stream )
 	Stream.R = Stream.R + 1
-	
+
 	if !Stream.T[Stream.R] then
 		Context:Throw( Trace, "stream", "Failed to read array from stream, stream returned void." )
 	elseif Stream.T[Stream.R] ~= "_ar" then

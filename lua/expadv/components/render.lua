@@ -372,7 +372,7 @@ Component:AddFunctionHelper( "setBackGroundColor", "c", "Sets the background col
 
 Component:AddPreparedFunction( "getBackgroundColor", "", "c", [[if IsValid( Context.entity ) and Context.entity.Screen then 
 	@define col = Context.entity:GetBackGround() 
-end]], "(@col or Color(0,0,0,255)" )
+end]], "(@col or Color(0,0,0,255))" )
 EXPADV.AddFunctionAlias("getBackGroundColor", "")
 
 Component:AddFunctionHelper( "getBackGroundColor", "", "Returns the background color of the screen." )

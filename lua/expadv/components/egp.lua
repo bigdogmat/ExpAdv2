@@ -351,7 +351,7 @@ end]])
 
 Component:AddPreparedFunction( "egpPolyUV", "wl:n,...", "", [[
 if $EGP:ValidEGP( @value 1 ) then 
-	@define @bool, _, @object = EGP:HasObject( @value 1, @value 2 )
+	@define bool, _, object = EGP:HasObject( @value 1, @value 2 )
 	if @bool and #{%...} >= 3 then 
 		
 		local Vertices = { } //@object.vertices or { }
@@ -377,9 +377,9 @@ end]])
 
 Component:AddPreparedFunction( "egpGlobalPos", "wl:n", "v", [[
 if $EGP:ValidEGP( @value 1 ) then 
-	@define @bool, _, @object = EGP:HasObject( @value 1, @value 2 )
+	@define bool, _, object = EGP:HasObject( @value 1, @value 2 )
 	if @bool then
-		@define @hasvertices, @posang = EGP:GetGlobalPos( @value 1, @value 2 )
+		@define hasvertices, posang = EGP:GetGlobalPos( @value 1, @value 2 )
 		if @hasvertices then 
 			@define result = Vector( @posang.x, @posang.y, @posang.angle )
 		end
@@ -462,8 +462,8 @@ if $EGP:ValidEGP( @value 1 ) then
 		
 	if @Bool and @B.x and @B.y then
 		
-		@define @Vec, @Ang = $LocalToWorld(Vector(@value 4.x,@value 4.y,0), Angle(0,0,0), Vector(@value 3.x,@value 3.y,0), Angle(0,-@value 5,0))
-		@define @T = { x = @Vec.x, y = @Vec.y }
+		@define Vec, Ang = $LocalToWorld(Vector(@value 4.x,@value 4.y,0), Angle(0,0,0), Vector(@value 3.x,@value 3.y,0), Angle(0,-@value 5,0))
+		@define T = { x = @Vec.x, y = @Vec.y }
 		
 		if @B.angle then
 			@T.angle = -@Ang.yaw
@@ -545,7 +545,7 @@ end]])
 ----------------------------
 Component:AddPreparedFunction( "egpParent", "wl:n,n", "", [[
 if $EGP:ValidEGP( @value 1 ) then  
-	@define @Bool, @B = EGP:SetParent( @value 1, @value 2, @value 3 )
+	@define Bool, B = EGP:SetParent( @value 1, @value 2, @value 3 )
 		
 	if @Bool then
 		$EGP:DoAction( @value 1, Context, "SendObject", @B )
@@ -569,7 +569,7 @@ end]])
 
 Component:AddPreparedFunction( "egpUnParent", "wl:n", "", [[
 if $EGP:ValidEGP( @value 1 ) then  
-	@define @Bool, @B = EGP:UnParent( @value 1, @value 2 )
+	@define Bool, B = EGP:UnParent( @value 1, @value 2 )
 		
 	if @Bool then
 		$EGP:DoAction( @value 1, Context, "SendObject", @B )
@@ -579,7 +579,7 @@ end]])
 
 Component:AddPreparedFunction( "egpParentToCursor", "wl:n", "", [[
 if $EGP:ValidEGP( @value 1 ) then  
-	@define @Bool, @B = EGP:SetParent( @value 1, @value 2, -1 )
+	@define Bool, B = EGP:SetParent( @value 1, @value 2, -1 )
 
 	if @Bool then
 		$EGP:DoAction( @value 1, Context, "SendObject", @B )
@@ -598,7 +598,7 @@ end]])
 
 Component:AddPreparedFunction( "egpRemove", "wl:n", "", [[
 if $EGP:ValidEGP( @value 1 ) then  
-	@define @Bool = EGP:HasObject( @value 1, @value 2 )
+	@define Bool = EGP:HasObject( @value 1, @value 2 )
 	if @Bool then
 		$EGP:DoAction( @value 1, Context, "RemoveObject", @value 2 )
 		Context.Data.EGP[@value 1] = true
@@ -610,10 +610,10 @@ Component:AddPreparedFunction( "egpCopy", "wl:n,n", "", [[
 if $EGP:ValidEGP( @value 1 ) then  
 	@define Bool, A, B = EGP:HasObject( @value 1, @value 3 )
 	if @Bool then
-		@define @copy = $table.Copy( @B )
+		@define copy = $table.Copy( @B )
 		@copy.index = @value 2
 
-		@define @Bool2, @Obj = EGP:CreateObject( @value 1, @B.ID, @copy, Context.player )
+		@define Bool2, Obj = EGP:CreateObject( @value 1, @B.ID, @copy, Context.player )
 		if @Bool2 then
 			$EGP:DoAction( @value 1, Context, "SendObject", @Obj )
 			Context.Data.EGP[@value 1] = true
@@ -633,11 +633,11 @@ end]])
 
 Component:AddPreparedFunction( "egpResolution", "wl:v2,v2", "", [[
 if $EGP:ValidEGP( @value 1 ) then  
-	@define @xScale = { @value 2.x, @value 3.x }
-	@define @yScale = { @value 2.y, @value 3.y }
+	@define xScale = { @value 2.x, @value 3.x }
+	@define yScale = { @value 2.y, @value 3.y }
 	
-	@define @xMul = @xScale[2] - @xScale[1]
-	@define @yMul = @yScale[2] - @yScale[1]
+	@define xMul = @xScale[2] - @xScale[1]
+	@define yMul = @yScale[2] - @yScale[1]
 	if @xMul == 0 or @yMul == 0 then error("Invalid EGP scale") end
 
 	$EGP:DoAction( @value 1, Context, "SetScale", @xScale, @yScale )
@@ -647,11 +647,11 @@ end]])
 -- Might not be correct
 Component:AddPreparedFunction( "egpScale", "wl:v2,v2", "", [[
 if $EGP:ValidEGP( @value 1 ) then  
-	@define @xScale = { @value 2.x, @value 2.y }
-	@define @yScale = { @value 3.x, @value 3.y }
+	@define xScale = { @value 2.x, @value 2.y }
+	@define yScale = { @value 3.x, @value 3.y }
 
-	@define @xMul = @xScale[2] - @xScale[1]
-	@define @yMul = @yScale[2] - @yScale[1]
+	@define xMul = @xScale[2] - @xScale[1]
+	@define yMul = @yScale[2] - @yScale[1]
 	if @xMul == 0 or @yMul == 0 then error("Invalid EGP scale") end
 
 	$EGP:DoAction( @value 1, Context, "SetScale", @xScale, @yScale)
@@ -682,7 +682,7 @@ end]], "@result")
 /*==============================================================================================
 	Section: Cursor
 ==============================================================================================*/
-Component:AddPreparedFunction( "egpCursor", "wl:e", "v2", "@define @V = $EGP:EGPCursor( @value 1, @value 2 )", "Vector2(@V[1],@V[2])" )
+Component:AddPreparedFunction( "egpCursor", "wl:e", "v2", "@define V = $EGP:EGPCursor( @value 1, @value 2 )", "Vector2(@V[1],@V[2])" )
 
 /*==============================================================================================
 	Section: Get Functions

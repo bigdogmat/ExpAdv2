@@ -152,29 +152,35 @@ function PANEL:Init()
 	self.btnClose:SetDrawBackground(false)
 
 	function self.btnAccept.DoClick()
-		for feature, _ in pairs(self.features) do
-			EXPADV.SetFeatureBlockedForEntity( self.entity, feature, false )
-			EXPADV.SetAcessToFeatureForEntity( self.entity, feature, true )
-		end
+		if IsValid( self.entity ) then
+			for feature, _ in pairs(self.features) do
+				EXPADV.SetFeatureBlockedForEntity( self.entity, feature, false )
+				EXPADV.SetAcessToFeatureForEntity( self.entity, feature, true )
+			end
 
-		self.entity.Context.Data.FeatureRequestMade = true
-		self.entity:CallEvent( "acceptedFeatures" )
+			self.entity.Context.Data.FeatureRequestMade = true
+			self.entity:CallEvent( "acceptedFeatures" )
+		end
 		self:Remove()
 	end
 
 	function self.btnBlock.DoClick()
-		for feature, _ in pairs(self.features) do
-			EXPADV.SetFeatureBlockedForEntity( self.entity, feature, true )
-			EXPADV.SetAcessToFeatureForEntity( self.entity, feature, false )
-		end
+		if IsValid( self.entity ) then
+			for feature, _ in pairs(self.features) do
+				EXPADV.SetFeatureBlockedForEntity( self.entity, feature, true )
+				EXPADV.SetAcessToFeatureForEntity( self.entity, feature, false )
+			end
 
-		self.entity.Context.Data.FeatureRequestMade = true
+			self.entity.Context.Data.FeatureRequestMade = true
+		end
 		self:Remove()
 	end
 
 	function self.btnClose.DoClick()
-		self.entity:CallEvent( "rejectedFeatures" )
-		//self.entity.Context.Data.FeatureRequestMade = true
+		if IsValid( self.entity ) then
+			self.entity:CallEvent( "rejectedFeatures" )
+			//self.entity.Context.Data.FeatureRequestMade = true
+		end
 		self:Remove()
 	end
 end

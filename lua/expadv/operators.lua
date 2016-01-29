@@ -789,7 +789,6 @@ function EXPADV.BuildLuaOperator( Operator )
 					local _, Add = string_gsub( OpPrepare, "@value " .. I, "" )
 					Uses = Uses + Add
 				end
-
 				-- Generate the inline and preperation.
 				if Uses == 0 or !Input then
 					InputInline = "nil" -- This should never happen!
@@ -819,11 +818,19 @@ function EXPADV.BuildLuaOperator( Operator )
 					InputReturn = Input.Return
 				end
 
-				-- Lets see if we need to localize the inline
-				if Uses >= 2 and !Input.IsRaw and !string_StartWith( InputInline, "Context.Definitions" ) then
-					local Defined = Compiler:DefineVariable( )
-					InputPrepare = string_format( "%s\n%s = %s", InputPrepare, Defined, InputInline )
-					InputInline = Defined
+				if Uses > 1 then
+					local ForceLocal = false;
+					-- Lets see if we need to localize the inline
+
+					if !Input.IsRaw then ForceLocal = true end
+					if string_StartWith(InputInline, "Context.Definitions") then ForceLocal = false end
+					if string_StartWith(InputInline, "Context.Instructions") then ForceLocal = true end
+
+					if ForceLocal then
+						local Defined = Compiler:DefineVariable( )
+						InputPrepare = string_format( "%s\n%s = %s", InputPrepare, Defined, InputInline )
+						InputInline = Defined
+					end
 				end
 			end
 

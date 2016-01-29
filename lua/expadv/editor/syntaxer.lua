@@ -463,18 +463,21 @@ function Syntaxer:Parse( Row )
 			end 
 			
 			if istype( word ) and keyword then 
-				addToken( "typename", self.tokendata )
-				self.tokendata = ""
+				addToken( "typename", self.tokendata ) 
+				self.tokendata = "" 
 				
-				local varname = string_match( self.line, " *([a-zA-Z][a-zA-Z0-9_]*)", self.position ) 
-				if varname then 
-					self.Variables[varname] = Row
+				self:NextPattern( " *" ) 
+				addToken( "operator", self.tokendata ) 
+				self.tokendata = "" 
+				
+				while self:NextPattern( "([a-zA-Z][a-zA-Z0-9_]*)" ) do 
+					self.Variables[self.tokendata] = Row 
+					addToken( "variable", self.tokendata ) 
+					self.tokendata = "" 
 					
-					for nStart, sText, nEnd in string_gmatch( string_sub( self.line, self.position ), "(), *([a-zA-Z][a-zA-Z0-9_]*)()" ) do 
-						if not istype( sText ) then 
-							self.Variables[sText] = Row 
-						end 
-					end 
+					if not self:NextPattern( " *, *" ) then break end 
+					addToken( "operator", self.tokendata ) 
+					self.tokendata = "" 
 				end 
 				continue 
 			end 
